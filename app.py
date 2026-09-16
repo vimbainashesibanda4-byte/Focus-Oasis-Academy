@@ -2300,6 +2300,16 @@ def admin_dashboard():
 def admin_overview():
     st.markdown("## Admin Overview")
 
+    # ECD Students banner image, hosted on the same GitHub repo as the
+    # school logo. Wrapped in a rounded card to match the rest of the
+    # dashboard's visual style rather than sitting as a bare <img>.
+    ECD_STUDENTS_IMAGE_URL = "https://raw.githubusercontent.com/vimbainashesibanda4-byte/Focus-Oasis-Academy/main/ECD%20Students.jfif"
+    st.markdown(f"""
+    <div style="border-radius:10px; overflow:hidden; border:1px solid {CARD_BORDER}; margin-bottom:20px;">
+        <img src="{ECD_STUDENTS_IMAGE_URL}" style="width:100%; display:block; object-fit:cover; max-height:320px;">
+    </div>
+    """, unsafe_allow_html=True)
+
     years = get_financial_years()
     col_filter, col_space = st.columns([1, 3])
     with col_filter:
