@@ -2303,7 +2303,7 @@ def admin_overview():
     # ECD Students banner image, hosted on the same GitHub repo as the
     # school logo. Wrapped in a rounded card to match the rest of the
     # dashboard's visual style rather than sitting as a bare <img>.
-    ECD_STUDENTS_IMAGE_URL = "https://raw.githubusercontent.com/vimbainashesibanda4-byte/Focus-Oasis-Academy/main/ECD%20Students.jfif"
+    ECD_STUDENTS_IMAGE_URL = "https://raw.githubusercontent.com/vimbainashesibanda4-byte/Focus-Oasis-Academy/main/ECD_Students_enhanced.jpg"
     st.markdown(f"""
     <div style="border-radius:10px; overflow:hidden; border:1px solid {CARD_BORDER}; margin-bottom:20px;">
         <img src="{ECD_STUDENTS_IMAGE_URL}" style="width:100%; display:block; object-fit:cover; max-height:320px;">
