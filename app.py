@@ -30,7 +30,7 @@ SCHOOL_LOGO_URL = "https://raw.githubusercontent.com/vimbainashesibanda4-byte/Fo
 # then paste its ID below (the long string in the middle of its URL:
 # https://docs.google.com/spreadsheets/d/THIS_PART_HERE/edit).
 SHEET_NAME = "Focus Oasis Accounting"
-SPREADSHEET_ID = "PASTE_YOUR_NEW_SHEET_ID_HERE"
+SPREADSHEET_ID = "1VKF32jONxp-IOE-2cb1tvlXcDitFpnlZGkRErg-MZjo"
 
 # Colors — Focus Oasis's own navy-and-blue palette, matching its
 # existing student/admin portal rather than School AIS's sky blue.
