@@ -21,7 +21,7 @@ st.set_page_config(
 # BRANDING
 # ============================================================
 SCHOOL_NAME = "Focus Oasis Foundation"
-SCHOOL_LOGO_URL = "https://raw.githubusercontent.com/MisheckMusiteyi/Focus-Oasis-/main/IMG-20260526-WA0009%20(1).jpg"
+SCHOOL_LOGO_URL = "https://raw.githubusercontent.com/vimbainashesibanda4-byte/Focus-Oasis-Academy/main/IMG-20260526-WA0009%20(1)%20(1).jpg"
 # NOTE: this accounting app is a SEPARATE Google Sheet from your existing
 # Focus Oasis student portal — the data model here (annual fees per
 # level, Staff Register, Fixed Assets, Journal Entries, etc.) doesn't
