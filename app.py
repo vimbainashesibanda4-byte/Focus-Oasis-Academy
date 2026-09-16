@@ -103,6 +103,28 @@ def inject_css():
             font-family: 'Georgia', 'Times New Roman', serif !important;
         }}
         
+        /* st.download_button renders as a separate element type
+           (stDownloadButton) from st.button (stButton) — without its
+           own rule it's left on Streamlit's raw default styling,
+           which is exactly the low-contrast look this fixes. */
+        [data-testid="stDownloadButton"] button {{
+            background-color: {PRIMARY} !important;
+            color: {WHITE} !important;
+            border: none !important;
+            border-radius: 6px !important;
+            font-weight: bold !important;
+        }}
+        [data-testid="stDownloadButton"] button:hover {{
+            background-color: {PRIMARY_DARK} !important;
+            color: {WHITE} !important;
+        }}
+        [data-testid="stDownloadButton"] button p, [data-testid="stDownloadButton"] button span,
+        [data-testid="stDownloadButton"] button div, [data-testid="stDownloadButton"] button label,
+        [data-testid="stDownloadButton"] button * {{
+            color: {WHITE} !important;
+            font-family: 'Georgia', 'Times New Roman', serif !important;
+        }}
+        
         .stTabs [aria-selected="true"] {{
             background-color: {PRIMARY} !important;
             color: {WHITE} !important;
