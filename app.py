@@ -2192,31 +2192,27 @@ def admin_dashboard():
         
         st.markdown("---")
         
-        admin_pages = [
-            "Overview",
-            "Register Student",
-            "All Students",
-            "Record Fee Payment",
-            "Fees Owing",
-            "Record Expense",
-            "Record Other Income",
-            "Staff Register",
-            "Fixed Assets Register",
-            "Loans Register",
-            "Creditors Register",
-            "Equity Register",
-            "Bank Statement",
-            "General Ledger",
-            "Trial Balance",
-            "Income Statement",
-            "Balance Sheet",
-            "Account Settings",
+        admin_menu = [
+            ("Overview", None),
+            ("Students", ["Register Student", "All Students", "Record Fee Payment", "Fees Owing"]),
+            ("Income & Expenses", ["Record Expense", "Record Other Income"]),
+            ("Registers", ["Staff Register", "Fixed Assets Register", "Loans Register", "Creditors Register", "Equity Register"]),
+            ("Accounting & Reports", ["Bank Statement", "General Ledger", "Trial Balance", "Income Statement", "Balance Sheet"]),
+            ("Account Settings", None),
         ]
-        
-        for page in admin_pages:
-            if st.button(page, key=f"admin_{page}", use_container_width=True):
-                st.session_state.admin_page = page
-                st.rerun()
+
+        for label, pages in admin_menu:
+            if pages is None:
+                if st.button(label, key=f"admin_{label}", use_container_width=True):
+                    st.session_state.admin_page = label
+                    st.rerun()
+            else:
+                expanded = st.session_state.admin_page in pages
+                with st.expander(label, expanded=expanded):
+                    for page in pages:
+                        if st.button(page, key=f"admin_{page}", use_container_width=True):
+                            st.session_state.admin_page = page
+                            st.rerun()
         
         st.markdown("---")
         if st.button("Logout", key="admin_logout", use_container_width=True):
