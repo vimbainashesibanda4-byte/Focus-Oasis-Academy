@@ -6,6 +6,7 @@ from datetime import datetime, date
 import time
 import io
 import bcrypt
+import requests
 
 # ============================================================
 # PAGE CONFIGURATION
@@ -1570,6 +1571,7 @@ def bank_statement_to_excel(df_stmt, opening_amount, closing_balance, statement_
     from openpyxl import Workbook
     from openpyxl.styles import Font, PatternFill, Alignment, Border, Side
     from openpyxl.utils import get_column_letter
+    from openpyxl.drawing.image import Image as XLImage
 
     wb = Workbook()
     ws = wb.active
@@ -1585,13 +1587,28 @@ def bank_statement_to_excel(df_stmt, opening_amount, closing_balance, statement_
     thin_border = Border(bottom=Side(style="thin", color="D5DCE3"))
     money_format = '#,##0.00'
 
-    ws.merge_cells("A1:F1")
-    ws["A1"] = "STATEMENT OF ACCOUNT"
-    ws["A1"].font = title_font
+    # Bank logo, top-left of the letterhead. Title/subtitle are pushed
+    # to column B onward so they don't sit under the image; the info
+    # rows below start at row 4, clear of the logo's height.
+    logo_bytes = get_bank_logo_bytes()
+    if logo_bytes:
+        try:
+            from PIL import Image as PILImage
+            pil_img = PILImage.open(io.BytesIO(logo_bytes))
+            xl_img = XLImage(pil_img)
+            xl_img.width = 90
+            xl_img.height = int(90 * pil_img.height / pil_img.width)
+            ws.add_image(xl_img, "A1")
+        except Exception:
+            pass  # a bad/unreachable logo shouldn't block the export
 
-    ws.merge_cells("A2:F2")
-    ws["A2"] = BANK_NAME
-    ws["A2"].font = subtitle_font
+    ws.merge_cells("B1:F1")
+    ws["B1"] = "STATEMENT OF ACCOUNT"
+    ws["B1"].font = title_font
+
+    ws.merge_cells("B2:F2")
+    ws["B2"] = BANK_NAME
+    ws["B2"].font = subtitle_font
 
     info_rows = [
         ("Account Holder", SCHOOL_NAME),
@@ -1646,7 +1663,7 @@ def bank_statement_to_pdf(df_stmt, opening_amount, closing_balance, statement_st
     from reportlab.lib.pagesizes import A4
     from reportlab.lib.units import mm
     from reportlab.lib import colors
-    from reportlab.platypus import SimpleDocTemplate, Table, TableStyle, Paragraph, Spacer
+    from reportlab.platypus import SimpleDocTemplate, Table, TableStyle, Paragraph, Spacer, Image as RLImage
     from reportlab.lib.styles import getSampleStyleSheet, ParagraphStyle
 
     buffer = io.BytesIO()
@@ -1659,9 +1676,36 @@ def bank_statement_to_pdf(df_stmt, opening_amount, closing_balance, statement_st
     subtitle_style = ParagraphStyle("StmtSubtitle", parent=styles["Normal"], fontSize=11, textColor=colors.HexColor("#2E86C1"), spaceAfter=10)
     info_style = ParagraphStyle("StmtInfo", parent=styles["Normal"], fontSize=9.5, leading=14)
 
-    story = [
-        Paragraph("STATEMENT OF ACCOUNT", title_style),
-        Paragraph(BANK_NAME, subtitle_style),
+    # Letterhead: logo on the left, title/bank name stacked on the
+    # right, laid out as a two-column table so they sit side by side.
+    # Falls back to the plain title block if the logo can't be fetched.
+    title_block = [Paragraph("STATEMENT OF ACCOUNT", title_style), Paragraph(BANK_NAME, subtitle_style)]
+    logo_bytes = get_bank_logo_bytes()
+    logo_flowable = None
+    if logo_bytes:
+        try:
+            from PIL import Image as PILImage
+            pil_img = PILImage.open(io.BytesIO(logo_bytes))
+            logo_w = 28 * mm
+            logo_h = logo_w * pil_img.height / pil_img.width
+            logo_flowable = RLImage(io.BytesIO(logo_bytes), width=logo_w, height=logo_h)
+        except Exception:
+            logo_flowable = None
+
+    if logo_flowable:
+        header_table = Table([[logo_flowable, title_block]], colWidths=[32 * mm, 130 * mm])
+        header_table.setStyle(TableStyle([
+            ("VALIGN", (0, 0), (-1, -1), "MIDDLE"),
+            ("LEFTPADDING", (0, 0), (-1, -1), 0),
+            ("RIGHTPADDING", (0, 0), (-1, -1), 0),
+            ("TOPPADDING", (0, 0), (-1, -1), 0),
+            ("BOTTOMPADDING", (0, 0), (-1, -1), 0),
+        ]))
+        header_flowables = [header_table, Spacer(1, 10)]
+    else:
+        header_flowables = [Paragraph("STATEMENT OF ACCOUNT", title_style), Paragraph(BANK_NAME, subtitle_style)]
+
+    story = header_flowables + [
         Paragraph(
             f"<b>Account Holder:</b> {SCHOOL_NAME}<br/>"
             f"<b>Statement Date:</b> {date.today().strftime('%B %d, %Y')}<br/>"
@@ -1985,9 +2029,24 @@ def trial_balance_to_pdf(df_tb, total_debit, total_credit):
 # (re-submit the form to correct it). Transactions dated before the
 # Opening Balance's date are excluded from the ledger, on the
 # assumption they're already folded into that opening figure.
-BANK_NAME = "NMB Bank Limited"
+BANK_NAME = "CBZ Bank Limited"
 BANK_ACCOUNT_NUMBER = "59950371005284"
 BANK_ACCOUNT_TYPE = "Business Current Account"
+BANK_LOGO_URL = "https://raw.githubusercontent.com/vimbainashesibanda4-byte/Focus-Oasis-Academy/main/cbz.png"
+
+
+@st.cache_data(ttl=3600, show_spinner=False)
+def get_bank_logo_bytes():
+    """Fetches the bank's logo once per hour and caches the raw bytes,
+    so every PDF/Excel export doesn't re-download it. Returns None on
+    any failure (offline, URL changed, etc.) so callers can skip the
+    logo gracefully instead of crashing the export."""
+    try:
+        resp = requests.get(BANK_LOGO_URL, timeout=10)
+        resp.raise_for_status()
+        return resp.content
+    except Exception:
+        return None
 
 
 def get_opening_balance():
@@ -2983,9 +3042,12 @@ def admin_bank_statement_page():
     st.markdown(f"""
     <div style="border:1px solid {CARD_BORDER}; border-radius:10px; padding:24px 28px; margin-bottom:20px; background:{WHITE};">
         <div style="display:flex; justify-content:space-between; align-items:flex-start; flex-wrap:wrap;">
-            <div>
-                <div style="font-size:22px; font-weight:700; color:{TEXT_DARK};">STATEMENT OF ACCOUNT</div>
-                <div style="font-size:13px; color:{SKY_BLUE}; margin-top:4px;">{BANK_NAME}</div>
+            <div style="display:flex; align-items:center; gap:14px;">
+                <img src="{BANK_LOGO_URL}" style="height:40px; width:auto;">
+                <div>
+                    <div style="font-size:22px; font-weight:700; color:{TEXT_DARK};">STATEMENT OF ACCOUNT</div>
+                    <div style="font-size:13px; color:{SKY_BLUE}; margin-top:4px;">{BANK_NAME}</div>
+                </div>
             </div>
             <div style="text-align:right; font-size:13px; color:{TEXT_DARK};">
                 <div><strong>STATEMENT DATE</strong> &nbsp; {date.today().strftime('%B %d, %Y')}</div>
