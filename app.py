@@ -81,7 +81,8 @@ def inject_css():
         }}
         
         [style*="Material Symbols"], .material-symbols-outlined, .material-symbols-rounded,
-        .material-symbols-sharp, [data-testid="stMarkdownContainer"] span[style*="font-family: Material"] {{
+        .material-symbols-sharp, [data-testid="stMarkdownContainer"] span[style*="font-family: Material"],
+        [data-testid="stIconMaterial"], [data-testid*="Icon"], [data-testid="stExpanderIcon"] {{
             font-family: 'Material Symbols Rounded', 'Material Symbols Outlined',
                          'Material Symbols Sharp', sans-serif !important;
         }}
@@ -182,6 +183,9 @@ def inject_css():
         }}
         [data-testid="stSidebar"] [data-testid="stExpander"] svg {{
             fill: {WHITE} !important;
+        }}
+        [data-testid="stSidebar"] [data-testid="stExpander"] [data-testid="stIconMaterial"] {{
+            color: {WHITE} !important;
         }}
         [data-testid="stSidebar"] [data-testid="stExpander"] [data-testid="stExpanderDetails"] {{
             padding: 6px 8px 10px 8px !important;
