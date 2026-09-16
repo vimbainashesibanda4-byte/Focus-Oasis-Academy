@@ -163,6 +163,30 @@ def inject_css():
             color: {WHITE} !important;
         }}
         
+        /* Grouped nav sections — st.expander ships with a light default
+           card look that clashes with the navy sidebar, so each layer of
+           it is restyled to match. */
+        [data-testid="stSidebar"] [data-testid="stExpander"] {{
+            background-color: {PRIMARY_DARK} !important;
+            border: none !important;
+            border-radius: 8px !important;
+            margin-bottom: 10px !important;
+        }}
+        [data-testid="stSidebar"] [data-testid="stExpander"] summary {{
+            color: {WHITE} !important;
+            font-weight: bold !important;
+            padding: 10px 12px !important;
+        }}
+        [data-testid="stSidebar"] [data-testid="stExpander"] summary:hover {{
+            background-color: #4A1522 !important;
+        }}
+        [data-testid="stSidebar"] [data-testid="stExpander"] svg {{
+            fill: {WHITE} !important;
+        }}
+        [data-testid="stSidebar"] [data-testid="stExpander"] [data-testid="stExpanderDetails"] {{
+            padding: 6px 8px 10px 8px !important;
+        }}
+        
         [data-testid*="ollapse" i] svg,
         [data-testid*="ollapse" i] span,
         [data-testid*="ollapse" i] p {{
@@ -2189,9 +2213,13 @@ def admin_dashboard():
             <p style="color: #BFD9F0; margin: 5px 0;">Accounting Portal</p>
         </div>
         """, unsafe_allow_html=True)
-        
+
         st.markdown("---")
-        
+
+        # Nav is grouped into collapsible sections so the sidebar reads as
+        # a few short menus instead of one long undifferentiated list.
+        # A page-list of None means a standalone top-level button rather
+        # than a group.
         admin_menu = [
             ("Overview", None),
             ("Students", ["Register Student", "All Students", "Record Fee Payment", "Fees Owing"]),
@@ -2207,21 +2235,24 @@ def admin_dashboard():
                     st.session_state.admin_page = label
                     st.rerun()
             else:
+                # Auto-open whichever group holds the current page, so
+                # landing on e.g. Trial Balance leaves "Accounting &
+                # Reports" already expanded.
                 expanded = st.session_state.admin_page in pages
                 with st.expander(label, expanded=expanded):
                     for page in pages:
                         if st.button(page, key=f"admin_{page}", use_container_width=True):
                             st.session_state.admin_page = page
                             st.rerun()
-        
+
         st.markdown("---")
         if st.button("Logout", key="admin_logout", use_container_width=True):
             for key in list(st.session_state.keys()):
                 del st.session_state[key]
             st.rerun()
-    
+
     page = st.session_state.admin_page
-    
+
     if page == "Overview":
         admin_overview()
     elif page == "Register Student":
@@ -3148,11 +3179,13 @@ def admin_trial_balance_page():
             html += '</tr>'
             for i, (_, row) in enumerate(section.iterrows()):
                 bg = FAINT_BLUE if i % 2 == 0 else WHITE
+                debit_str = f"${row['Debit']:,.2f}" if row["Debit"] else ""
+                credit_str = f"${row['Credit']:,.2f}" if row["Credit"] else ""
                 html += f'<tr style="background-color:{bg};">'
                 html += f'<td style="padding:10px 12px; color:{TEXT_DARK};">{ACCOUNT_CODES.get(row["Account"], "")}</td>'
                 html += f'<td style="padding:10px 12px; color:{TEXT_DARK};">{row["Account"]}</td>'
-                html += f'<td style="padding:10px 12px; color:{TEXT_DARK};">{f"${row['Debit']:,.2f}" if row["Debit"] else ""}</td>'
-                html += f'<td style="padding:10px 12px; color:{TEXT_DARK};">{f"${row['Credit']:,.2f}" if row["Credit"] else ""}</td>'
+                html += f'<td style="padding:10px 12px; color:{TEXT_DARK};">{debit_str}</td>'
+                html += f'<td style="padding:10px 12px; color:{TEXT_DARK};">{credit_str}</td>'
                 html += '</tr>'
             html += f'<tr style="background-color:{LIGHT_GREY}; font-weight:bold;">'
             html += f'<td style="padding:10px 12px;" colspan="2">Total {section_titles.get(acc_type, acc_type)}</td>'
