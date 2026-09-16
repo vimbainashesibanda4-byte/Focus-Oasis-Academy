@@ -1073,6 +1073,32 @@ CHART_OF_ACCOUNTS = {
 
 ACCOUNT_TYPE_ORDER = ["Asset", "Liability", "Equity", "Income", "Expense"]
 
+# Standard chart-of-accounts numbering (1000s Assets, 2000s Liabilities,
+# 3000s Equity, 4000s Income, 5000s Expenses) — conventional professional
+# bookkeeping presentation. Worth being precise about scope: IFRS itself
+# governs recognition, measurement and disclosure in the financial
+# STATEMENTS (the SOCI and Statement of Financial Position elsewhere in
+# this app) — it doesn't prescribe a ledger or trial balance layout, since
+# those are internal working papers, not a reporting output. This
+# numbering and grouping is the standard professional convention for
+# presenting them, which is what "IFRS standard" reasonably means for a
+# working paper that isn't itself an IFRS-governed statement.
+ACCOUNT_CODES = {
+    "Cash and Cash Equivalents": "1000", "Debtors (Fees Receivable)": "1010",
+    "Buildings": "1100", "Fixtures and Fittings": "1110", "Computer Software": "1120",
+    "Motor Vehicles": "1130", "Computers": "1140", "Accumulated Depreciation": "1190",
+    "Creditors": "2000", "Short-term Loans": "2010", "Tax Payable": "2020",
+    "Deferred Income (Prepaid Fees)": "2030", "Long-term Loans": "2100",
+    "Ordinary Share Capital": "3000", "Share Premium": "3010",
+    "Revaluation Reserve": "3020", "Retained Earnings": "3030",
+    "Fee Income": "4000", "Other Income": "4010",
+    "Staff Costs": "5000", "Utilities": "5010", "Teaching materials and supplies": "5020",
+    "Repairs and maintenance": "5030", "Food and catering": "5040", "Transport": "5050",
+    "Printing and stationery": "5060", "Events and extracurricular activities": "5070",
+    "Sundry expenses": "5080", "Depreciation Expense": "5090",
+    "Finance Costs": "5100", "Income Tax Expense": "5110",
+}
+
 
 def post_journal_entry(entry_date, description, debit_account, credit_account, amount, source):
     """Appends one balanced journal entry (one Debit account, one Credit
@@ -1499,14 +1525,14 @@ def bank_statement_to_excel(df_stmt, opening_amount, closing_balance, statement_
     ws = wb.active
     ws.title = "Bank Statement"
 
-    title_font = Font(name="Calibri", size=16, bold=True, color="0B2A3D")
-    subtitle_font = Font(name="Calibri", size=11, color="4A7A99")
+    title_font = Font(name="Calibri", size=16, bold=True, color="1B2A4A")
+    subtitle_font = Font(name="Calibri", size=11, color="2E86C1")
     header_label_font = Font(name="Calibri", size=10, bold=True)
     body_font = Font(name="Calibri", size=10)
     table_header_font = Font(name="Calibri", size=10, bold=True, color="FFFFFF")
-    table_header_fill = PatternFill(start_color="0A9EE8", end_color="0A9EE8", fill_type="solid")
-    alt_row_fill = PatternFill(start_color="EAF6FD", end_color="EAF6FD", fill_type="solid")
-    thin_border = Border(bottom=Side(style="thin", color="CFE8F7"))
+    table_header_fill = PatternFill(start_color="1B2A4A", end_color="1B2A4A", fill_type="solid")
+    alt_row_fill = PatternFill(start_color="F4F6F9", end_color="F4F6F9", fill_type="solid")
+    thin_border = Border(bottom=Side(style="thin", color="D5DCE3"))
     money_format = '#,##0.00'
 
     ws.merge_cells("A1:F1")
@@ -1579,8 +1605,8 @@ def bank_statement_to_pdf(df_stmt, opening_amount, closing_balance, statement_st
         leftMargin=18 * mm, rightMargin=18 * mm, topMargin=16 * mm, bottomMargin=16 * mm,
     )
     styles = getSampleStyleSheet()
-    title_style = ParagraphStyle("StmtTitle", parent=styles["Title"], fontSize=18, textColor=colors.HexColor("#0B2A3D"), spaceAfter=2)
-    subtitle_style = ParagraphStyle("StmtSubtitle", parent=styles["Normal"], fontSize=11, textColor=colors.HexColor("#4A7A99"), spaceAfter=10)
+    title_style = ParagraphStyle("StmtTitle", parent=styles["Title"], fontSize=18, textColor=colors.HexColor("#1B2A4A"), spaceAfter=2)
+    subtitle_style = ParagraphStyle("StmtSubtitle", parent=styles["Normal"], fontSize=11, textColor=colors.HexColor("#2E86C1"), spaceAfter=10)
     info_style = ParagraphStyle("StmtInfo", parent=styles["Normal"], fontSize=9.5, leading=14)
 
     story = [
@@ -1610,21 +1636,287 @@ def bank_statement_to_pdf(df_stmt, opening_amount, closing_balance, statement_st
 
     table = Table(table_data, colWidths=[20 * mm, 62 * mm, 20 * mm, 22 * mm, 22 * mm, 25 * mm], repeatRows=1)
     style_commands = [
-        ("BACKGROUND", (0, 0), (-1, 0), colors.HexColor("#0A9EE8")),
+        ("BACKGROUND", (0, 0), (-1, 0), colors.HexColor("#1B2A4A")),
         ("TEXTCOLOR", (0, 0), (-1, 0), colors.white),
         ("FONTNAME", (0, 0), (-1, 0), "Helvetica-Bold"),
         ("FONTSIZE", (0, 0), (-1, -1), 8.5),
         ("ALIGN", (3, 0), (5, -1), "RIGHT"),
-        ("LINEBELOW", (0, 0), (-1, -2), 0.4, colors.HexColor("#CFE8F7")),
+        ("LINEBELOW", (0, 0), (-1, -2), 0.4, colors.HexColor("#D5DCE3")),
         ("VALIGN", (0, 0), (-1, -1), "TOP"),
         ("TOPPADDING", (0, 0), (-1, -1), 4),
         ("BOTTOMPADDING", (0, 0), (-1, -1), 4),
     ]
     for i in range(1, len(table_data)):
         if i % 2 == 1:
-            style_commands.append(("BACKGROUND", (0, i), (-1, i), colors.HexColor("#EAF6FD")))
+            style_commands.append(("BACKGROUND", (0, i), (-1, i), colors.HexColor("#F4F6F9")))
     table.setStyle(TableStyle(style_commands))
     story.append(table)
+
+    doc.build(story)
+    return buffer.getvalue()
+
+
+def ledger_table_to_excel(df, title, subtitle, columns, money_columns):
+    """
+    Generic letterhead-style .xlsx export for a ledger-shaped table
+    (General Journal or one account's T-account view) — same visual
+    treatment as the Bank Statement export, reused here to keep every
+    accounting output looking consistent.
+    """
+    from openpyxl import Workbook
+    from openpyxl.styles import Font, PatternFill, Alignment, Border, Side
+    from openpyxl.utils import get_column_letter
+
+    wb = Workbook()
+    ws = wb.active
+    ws.title = title[:31]
+
+    title_font = Font(name="Calibri", size=16, bold=True, color="1B2A4A")
+    subtitle_font = Font(name="Calibri", size=11, color="2E86C1")
+    table_header_font = Font(name="Calibri", size=10, bold=True, color="FFFFFF")
+    table_header_fill = PatternFill(start_color="1B2A4A", end_color="1B2A4A", fill_type="solid")
+    alt_row_fill = PatternFill(start_color="F4F6F9", end_color="F4F6F9", fill_type="solid")
+    body_font = Font(name="Calibri", size=10)
+    thin_border = Border(bottom=Side(style="thin", color="D5DCE3"))
+
+    ws.merge_cells(f"A1:{get_column_letter(len(columns))}1")
+    ws["A1"] = title
+    ws["A1"].font = title_font
+    ws.merge_cells(f"A2:{get_column_letter(len(columns))}2")
+    ws["A2"] = subtitle
+    ws["A2"].font = subtitle_font
+
+    header_row = 4
+    for c, h in enumerate(columns, start=1):
+        cell = ws.cell(row=header_row, column=c, value=h)
+        cell.font = table_header_font
+        cell.fill = table_header_fill
+
+    for i, (_, r) in enumerate(df.iterrows()):
+        rr = header_row + 1 + i
+        for c, col in enumerate(columns, start=1):
+            val = r.get(col, "")
+            if col in money_columns and val == 0:
+                val = None
+            cell = ws.cell(row=rr, column=c, value=val)
+            cell.font = body_font
+            cell.border = thin_border
+            if i % 2 == 0:
+                cell.fill = alt_row_fill
+            if col in money_columns and val is not None:
+                cell.number_format = '#,##0.00'
+
+    for c in range(1, len(columns) + 1):
+        ws.column_dimensions[get_column_letter(c)].width = 30 if c == 2 else 16
+    ws.freeze_panes = f"A{header_row + 1}"
+
+    buffer = io.BytesIO()
+    wb.save(buffer)
+    return buffer.getvalue()
+
+
+def ledger_table_to_pdf(df, title, subtitle, columns, money_columns, col_widths_mm):
+    """Generic letterhead-style PDF export, matching ledger_table_to_excel."""
+    from reportlab.lib.pagesizes import A4
+    from reportlab.lib.units import mm
+    from reportlab.lib import colors
+    from reportlab.platypus import SimpleDocTemplate, Table, TableStyle, Paragraph, Spacer
+    from reportlab.lib.styles import getSampleStyleSheet, ParagraphStyle
+
+    buffer = io.BytesIO()
+    doc = SimpleDocTemplate(
+        buffer, pagesize=A4,
+        leftMargin=16 * mm, rightMargin=16 * mm, topMargin=16 * mm, bottomMargin=16 * mm,
+    )
+    styles = getSampleStyleSheet()
+    title_style = ParagraphStyle("LedgerTitle", parent=styles["Title"], fontSize=16, textColor=colors.HexColor("#1B2A4A"), spaceAfter=2)
+    subtitle_style = ParagraphStyle("LedgerSubtitle", parent=styles["Normal"], fontSize=10.5, textColor=colors.HexColor("#2E86C1"), spaceAfter=10)
+
+    story = [Paragraph(title, title_style), Paragraph(subtitle, subtitle_style), Spacer(1, 8)]
+
+    table_data = [columns]
+    for _, r in df.iterrows():
+        row = []
+        for col in columns:
+            val = r.get(col, "")
+            if col in money_columns:
+                row.append(f"{val:,.2f}" if val else "")
+            elif col == "Description" or col == "Account":
+                row.append(Paragraph(str(val), styles["Normal"]))
+            else:
+                row.append(str(val))
+        table_data.append(row)
+
+    table = Table(table_data, colWidths=[w * mm for w in col_widths_mm], repeatRows=1)
+    style_commands = [
+        ("BACKGROUND", (0, 0), (-1, 0), colors.HexColor("#1B2A4A")),
+        ("TEXTCOLOR", (0, 0), (-1, 0), colors.white),
+        ("FONTNAME", (0, 0), (-1, 0), "Helvetica-Bold"),
+        ("FONTSIZE", (0, 0), (-1, -1), 8),
+        ("LINEBELOW", (0, 0), (-1, -2), 0.4, colors.HexColor("#D5DCE3")),
+        ("VALIGN", (0, 0), (-1, -1), "TOP"),
+        ("TOPPADDING", (0, 0), (-1, -1), 3),
+        ("BOTTOMPADDING", (0, 0), (-1, -1), 3),
+    ]
+    for i in range(1, len(table_data)):
+        if i % 2 == 1:
+            style_commands.append(("BACKGROUND", (0, i), (-1, i), colors.HexColor("#F4F6F9")))
+    table.setStyle(TableStyle(style_commands))
+    story.append(table)
+
+    doc.build(story)
+    return buffer.getvalue()
+
+
+def trial_balance_to_excel(df_tb, total_debit, total_credit):
+    """Trial Balance export: grouped by account type with subtotals,
+    account codes, and a Debit=Credit check row — standard professional
+    presentation for this working paper."""
+    from openpyxl import Workbook
+    from openpyxl.styles import Font, PatternFill, Alignment, Border, Side
+    from openpyxl.utils import get_column_letter
+
+    wb = Workbook()
+    ws = wb.active
+    ws.title = "Trial Balance"
+
+    title_font = Font(name="Calibri", size=16, bold=True, color="1B2A4A")
+    subtitle_font = Font(name="Calibri", size=11, color="2E86C1")
+    section_font = Font(name="Calibri", size=11, bold=True, color="1B2A4A")
+    table_header_font = Font(name="Calibri", size=10, bold=True, color="FFFFFF")
+    table_header_fill = PatternFill(start_color="1B2A4A", end_color="1B2A4A", fill_type="solid")
+    subtotal_fill = PatternFill(start_color="D5DCE3", end_color="D5DCE3", fill_type="solid")
+    total_fill = PatternFill(start_color="1B2A4A", end_color="1B2A4A", fill_type="solid")
+    total_font = Font(name="Calibri", size=11, bold=True, color="FFFFFF")
+    body_font = Font(name="Calibri", size=10)
+    alt_row_fill = PatternFill(start_color="F4F6F9", end_color="F4F6F9", fill_type="solid")
+    thin_border = Border(bottom=Side(style="thin", color="D5DCE3"))
+
+    ws.merge_cells("A1:D1")
+    ws["A1"] = f"{SCHOOL_NAME}"
+    ws["A1"].font = title_font
+    ws.merge_cells("A2:D2")
+    ws["A2"] = f"Trial Balance as at {date.today().strftime('%d %B %Y')}"
+    ws["A2"].font = subtitle_font
+
+    row = 4
+    headers = ["Code", "Account", "Debit", "Credit"]
+    for c, h in enumerate(headers, start=1):
+        cell = ws.cell(row=row, column=c, value=h)
+        cell.font = table_header_font
+        cell.fill = table_header_fill
+    row += 1
+
+    section_titles = {"Asset": "Assets", "Liability": "Liabilities", "Equity": "Equity", "Income": "Income", "Expense": "Expenses"}
+    for acc_type in ACCOUNT_TYPE_ORDER:
+        section = df_tb[df_tb["Type"] == acc_type]
+        if section.empty:
+            continue
+        ws.cell(row=row, column=1, value=section_titles.get(acc_type, acc_type)).font = section_font
+        row += 1
+        for i, (_, r) in enumerate(section.iterrows()):
+            ws.cell(row=row, column=1, value=ACCOUNT_CODES.get(r["Account"], "")).font = body_font
+            ws.cell(row=row, column=2, value=r["Account"]).font = body_font
+            debit_cell = ws.cell(row=row, column=3, value=r["Debit"] if r["Debit"] else None)
+            credit_cell = ws.cell(row=row, column=4, value=r["Credit"] if r["Credit"] else None)
+            for cell in (ws.cell(row=row, column=1), ws.cell(row=row, column=2), debit_cell, credit_cell):
+                cell.border = thin_border
+                if i % 2 == 0:
+                    cell.fill = alt_row_fill
+            debit_cell.number_format = '#,##0.00'
+            credit_cell.number_format = '#,##0.00'
+            row += 1
+        subtotal_debit = section["Debit"].sum()
+        subtotal_credit = section["Credit"].sum()
+        ws.cell(row=row, column=2, value=f"Total {section_titles.get(acc_type, acc_type)}").font = Font(name="Calibri", size=10, bold=True)
+        sd = ws.cell(row=row, column=3, value=subtotal_debit if subtotal_debit else None)
+        sc = ws.cell(row=row, column=4, value=subtotal_credit if subtotal_credit else None)
+        sd.number_format = '#,##0.00'
+        sc.number_format = '#,##0.00'
+        for c in range(1, 5):
+            ws.cell(row=row, column=c).fill = subtotal_fill
+        row += 2
+
+    ws.cell(row=row, column=2, value="TOTAL").font = total_font
+    td = ws.cell(row=row, column=3, value=total_debit)
+    tc = ws.cell(row=row, column=4, value=total_credit)
+    td.number_format = '#,##0.00'
+    tc.number_format = '#,##0.00'
+    for c in range(1, 5):
+        ws.cell(row=row, column=c).fill = total_fill
+    ws.cell(row=row, column=1).font = total_font
+
+    widths = [10, 40, 16, 16]
+    for c, w in enumerate(widths, start=1):
+        ws.column_dimensions[get_column_letter(c)].width = w
+
+    buffer = io.BytesIO()
+    wb.save(buffer)
+    return buffer.getvalue()
+
+
+def trial_balance_to_pdf(df_tb, total_debit, total_credit):
+    """PDF version of the Trial Balance, matching trial_balance_to_excel."""
+    from reportlab.lib.pagesizes import A4
+    from reportlab.lib.units import mm
+    from reportlab.lib import colors
+    from reportlab.platypus import SimpleDocTemplate, Table, TableStyle, Paragraph, Spacer
+    from reportlab.lib.styles import getSampleStyleSheet, ParagraphStyle
+
+    buffer = io.BytesIO()
+    doc = SimpleDocTemplate(
+        buffer, pagesize=A4,
+        leftMargin=18 * mm, rightMargin=18 * mm, topMargin=16 * mm, bottomMargin=16 * mm,
+    )
+    styles = getSampleStyleSheet()
+    title_style = ParagraphStyle("TBTitle", parent=styles["Title"], fontSize=16, textColor=colors.HexColor("#1B2A4A"), spaceAfter=2)
+    subtitle_style = ParagraphStyle("TBSubtitle", parent=styles["Normal"], fontSize=11, textColor=colors.HexColor("#2E86C1"), spaceAfter=10)
+    section_style = ParagraphStyle("TBSection", parent=styles["Normal"], fontSize=10.5, textColor=colors.HexColor("#1B2A4A"), spaceBefore=8, spaceAfter=2, fontName="Helvetica-Bold")
+
+    story = [Paragraph(SCHOOL_NAME, title_style), Paragraph(f"Trial Balance as at {date.today().strftime('%d %B %Y')}", subtitle_style)]
+
+    section_titles = {"Asset": "Assets", "Liability": "Liabilities", "Equity": "Equity", "Income": "Income", "Expense": "Expenses"}
+    for acc_type in ACCOUNT_TYPE_ORDER:
+        section = df_tb[df_tb["Type"] == acc_type]
+        if section.empty:
+            continue
+        story.append(Paragraph(section_titles.get(acc_type, acc_type), section_style))
+        table_data = [["Code", "Account", "Debit", "Credit"]]
+        for _, r in section.iterrows():
+            table_data.append([
+                ACCOUNT_CODES.get(r["Account"], ""), r["Account"],
+                f"{r['Debit']:,.2f}" if r["Debit"] else "",
+                f"{r['Credit']:,.2f}" if r["Credit"] else "",
+            ])
+        table_data.append(["", f"Total {section_titles.get(acc_type, acc_type)}", f"{section['Debit'].sum():,.2f}", f"{section['Credit'].sum():,.2f}"])
+        table = Table(table_data, colWidths=[18 * mm, 75 * mm, 30 * mm, 30 * mm], repeatRows=1)
+        style_commands = [
+            ("BACKGROUND", (0, 0), (-1, 0), colors.HexColor("#1B2A4A")),
+            ("TEXTCOLOR", (0, 0), (-1, 0), colors.white),
+            ("FONTNAME", (0, 0), (-1, 0), "Helvetica-Bold"),
+            ("FONTNAME", (0, -1), (-1, -1), "Helvetica-Bold"),
+            ("BACKGROUND", (0, -1), (-1, -1), colors.HexColor("#D5DCE3")),
+            ("FONTSIZE", (0, 0), (-1, -1), 8.5),
+            ("ALIGN", (2, 0), (3, -1), "RIGHT"),
+            ("LINEBELOW", (0, 0), (-1, -2), 0.4, colors.HexColor("#D5DCE3")),
+            ("TOPPADDING", (0, 0), (-1, -1), 3),
+            ("BOTTOMPADDING", (0, 0), (-1, -1), 3),
+        ]
+        table.setStyle(TableStyle(style_commands))
+        story.append(table)
+
+    story.append(Spacer(1, 10))
+    total_table = Table([["TOTAL", f"{total_debit:,.2f}", f"{total_credit:,.2f}"]], colWidths=[93 * mm, 30 * mm, 30 * mm])
+    total_table.setStyle(TableStyle([
+        ("BACKGROUND", (0, 0), (-1, -1), colors.HexColor("#1B2A4A")),
+        ("TEXTCOLOR", (0, 0), (-1, -1), colors.white),
+        ("FONTNAME", (0, 0), (-1, -1), "Helvetica-Bold"),
+        ("FONTSIZE", (0, 0), (-1, -1), 10),
+        ("ALIGN", (1, 0), (2, 0), "RIGHT"),
+        ("TOPPADDING", (0, 0), (-1, -1), 6),
+        ("BOTTOMPADDING", (0, 0), (-1, -1), 6),
+    ]))
+    story.append(total_table)
 
     doc.build(story)
     return buffer.getvalue()
@@ -2693,6 +2985,7 @@ def admin_bank_statement_page():
 
 def admin_general_ledger_page():
     st.markdown("## General Ledger")
+    st.caption(f"{SCHOOL_NAME} — as at {date.today().strftime('%d %B %Y')}")
 
     with st.container(border=True):
         st.markdown("#### Post Year-End Adjustments")
@@ -2746,10 +3039,37 @@ def admin_general_ledger_page():
             display_cols = [c for c in ["Date", "Description", "Debit Account", "Credit Account", "Amount", "Source"] if c in df_journal.columns]
             st.dataframe(df_journal[display_cols], use_container_width=True, hide_index=True)
 
+            dl_col1, dl_col2 = st.columns(2)
+            with dl_col1:
+                st.download_button(
+                    "Download Journal as Excel",
+                    data=ledger_table_to_excel(
+                        df_journal[display_cols], "General Journal", f"{SCHOOL_NAME} — as at {date.today().strftime('%d %B %Y')}",
+                        display_cols, {"Amount"},
+                    ),
+                    file_name=f"{SCHOOL_NAME.replace(' ', '_')}_General_Journal_{date.today().isoformat()}.xlsx",
+                    mime="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+                    use_container_width=True, key="journal_excel_dl",
+                )
+            with dl_col2:
+                st.download_button(
+                    "Download Journal as PDF",
+                    data=ledger_table_to_pdf(
+                        df_journal[display_cols], "General Journal", f"{SCHOOL_NAME} — as at {date.today().strftime('%d %B %Y')}",
+                        display_cols, {"Amount"}, [18, 60, 32, 32, 18, 20],
+                    ),
+                    file_name=f"{SCHOOL_NAME.replace(' ', '_')}_General_Journal_{date.today().isoformat()}.pdf",
+                    mime="application/pdf",
+                    use_container_width=True, key="journal_pdf_dl",
+                )
+
     with st.container(border=True):
         st.markdown("#### Account Ledger (T-Account View)")
         account_names = list(CHART_OF_ACCOUNTS.keys())
-        selected_account = st.selectbox("Account", account_names, key="ledger_account_select")
+        selected_account = st.selectbox(
+            "Account", account_names, key="ledger_account_select",
+            format_func=lambda a: f"{ACCOUNT_CODES.get(a, '')} — {a}",
+        )
         df_acc = compute_account_ledger(selected_account)
         if df_acc.empty:
             st.info(f"No activity yet on '{selected_account}'.")
@@ -2759,10 +3079,36 @@ def admin_general_ledger_page():
             _, normal_side = CHART_OF_ACCOUNTS.get(selected_account, ("Asset", "Debit"))
             st.markdown(f"**Closing balance:** ${closing_balance:,.2f} ({normal_side})")
 
+            acc_code = ACCOUNT_CODES.get(selected_account, "")
+            ledger_cols = ["Date", "Description", "Debit", "Credit", "Balance", "Source"]
+            dl_col1, dl_col2 = st.columns(2)
+            with dl_col1:
+                st.download_button(
+                    "Download Ledger as Excel",
+                    data=ledger_table_to_excel(
+                        df_acc, f"Ledger — {selected_account}", f"Account {acc_code} — {SCHOOL_NAME} — as at {date.today().strftime('%d %B %Y')}",
+                        ledger_cols, {"Debit", "Credit", "Balance"},
+                    ),
+                    file_name=f"{SCHOOL_NAME.replace(' ', '_')}_Ledger_{selected_account.replace(' ', '_')}_{date.today().isoformat()}.xlsx",
+                    mime="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+                    use_container_width=True, key="account_ledger_excel_dl",
+                )
+            with dl_col2:
+                st.download_button(
+                    "Download Ledger as PDF",
+                    data=ledger_table_to_pdf(
+                        df_acc, f"Ledger — {selected_account}", f"Account {acc_code} — {SCHOOL_NAME} — as at {date.today().strftime('%d %B %Y')}",
+                        ledger_cols, {"Debit", "Credit", "Balance"}, [22, 62, 22, 22, 24, 24],
+                    ),
+                    file_name=f"{SCHOOL_NAME.replace(' ', '_')}_Ledger_{selected_account.replace(' ', '_')}_{date.today().isoformat()}.pdf",
+                    mime="application/pdf",
+                    use_container_width=True, key="account_ledger_pdf_dl",
+                )
+
 
 def admin_trial_balance_page():
     st.markdown("## Trial Balance")
-    st.caption("Every account's net balance, sitting on whichever side (Debit/Credit) it actually falls — built directly from posted journal entries.")
+    st.caption(f"{SCHOOL_NAME} — as at {date.today().strftime('%d %B %Y')}")
 
     df_tb, total_debit, total_credit = compute_trial_balance()
 
@@ -2779,16 +3125,22 @@ def admin_trial_balance_page():
             st.markdown(f"#### {section_titles.get(acc_type, acc_type)}")
             html = '<table style="width:100%; border-collapse:collapse; font-size:14px;">'
             html += f'<tr style="background-color:{PRIMARY}; color:{WHITE};">'
-            for col in ["Account", "Debit", "Credit"]:
+            for col in ["Code", "Account", "Debit", "Credit"]:
                 html += f'<th style="padding:10px 12px; text-align:left;">{col}</th>'
             html += '</tr>'
             for i, (_, row) in enumerate(section.iterrows()):
                 bg = FAINT_BLUE if i % 2 == 0 else WHITE
                 html += f'<tr style="background-color:{bg};">'
+                html += f'<td style="padding:10px 12px; color:{TEXT_DARK};">{ACCOUNT_CODES.get(row["Account"], "")}</td>'
                 html += f'<td style="padding:10px 12px; color:{TEXT_DARK};">{row["Account"]}</td>'
                 html += f'<td style="padding:10px 12px; color:{TEXT_DARK};">{f"${row['Debit']:,.2f}" if row["Debit"] else ""}</td>'
                 html += f'<td style="padding:10px 12px; color:{TEXT_DARK};">{f"${row['Credit']:,.2f}" if row["Credit"] else ""}</td>'
                 html += '</tr>'
+            html += f'<tr style="background-color:{LIGHT_GREY}; font-weight:bold;">'
+            html += f'<td style="padding:10px 12px;" colspan="2">Total {section_titles.get(acc_type, acc_type)}</td>'
+            html += f'<td style="padding:10px 12px;">${section["Debit"].sum():,.2f}</td>'
+            html += f'<td style="padding:10px 12px;">${section["Credit"].sum():,.2f}</td>'
+            html += '</tr>'
             html += '</table>'
             st.markdown(html, unsafe_allow_html=True)
 
@@ -2800,16 +3152,24 @@ def admin_trial_balance_page():
     </div>
     """, unsafe_allow_html=True)
 
-    export_df = df_tb.copy()
-    export_df["Debit"] = export_df["Debit"].apply(lambda v: f"{v:,.2f}" if v else "")
-    export_df["Credit"] = export_df["Credit"].apply(lambda v: f"{v:,.2f}" if v else "")
-    st.download_button(
-        "Download as Excel",
-        data=df_to_excel_download(export_df, "Trial Balance"),
-        file_name=f"{SCHOOL_NAME.replace(' ', '_')}_Trial_Balance_{date.today().isoformat()}.xlsx",
-        mime="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
-        use_container_width=True,
-    )
+    st.markdown("<br>", unsafe_allow_html=True)
+    dl_col1, dl_col2 = st.columns(2)
+    with dl_col1:
+        st.download_button(
+            "Download as Excel",
+            data=trial_balance_to_excel(df_tb, total_debit, total_credit),
+            file_name=f"{SCHOOL_NAME.replace(' ', '_')}_Trial_Balance_{date.today().isoformat()}.xlsx",
+            mime="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+            use_container_width=True, key="tb_excel_dl",
+        )
+    with dl_col2:
+        st.download_button(
+            "Download as PDF",
+            data=trial_balance_to_pdf(df_tb, total_debit, total_credit),
+            file_name=f"{SCHOOL_NAME.replace(' ', '_')}_Trial_Balance_{date.today().isoformat()}.pdf",
+            mime="application/pdf",
+            use_container_width=True, key="tb_pdf_dl",
+        )
 
 
 def admin_income_statement_page():
